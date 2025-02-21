@@ -7,6 +7,7 @@ from config import *
 from log import *
 from robinhood import *
 import asyncio
+from zoneinfo import ZoneInfo
 
 
 # Initialize session and login
@@ -67,13 +68,14 @@ def make_ai_decisions(buying_power, portfolio_overview, watchlist_overview):
 
     ai_prompt = (
         "**Context:**\n"
-        f"Today is {datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')}.{chr(10)}"
+        f"Today is {datetime.now(ZoneInfo('America/New_York')).strftime('%Y-%m-%dT%H:%M:%SZ')}.{chr(10)}"
         f"You are a short-term investment advisor managing a stock portfolio.{chr(10)}"
         f"You analyze market conditions every {RUN_INTERVAL_SECONDS} seconds and make investment decisions.{chr(10)}{chr(10)}"
         "**Constraints:**\n"
-        f"{chr(10).join(constraints)}"
-        "\n\n"
+        f"{chr(10).join(constraints)}{chr(10)}"
+        f"(Note: These constraints may include guidelines such as risk tolerance, trading limits, or other investment rules.){chr(10)}{chr(10)}"
         "**Stock Data:**\n"
+        f"The JSON below provides a combined view of your portfolio and watchlist data. It includes details like current holdings, performance metrics, potential stock targets, and key market indicators.{chr(10)}"
         "```json\n"
         f"{json.dumps({**portfolio_overview, **watchlist_overview}, indent=1)}{chr(10)}"
         "```\n\n"
@@ -87,9 +89,9 @@ def make_ai_decisions(buying_power, portfolio_overview, watchlist_overview):
         "```\n"
         "- <symbol>: Stock symbol.\n"
         "- <decision>: One of `buy`, `sell`, or `hold`.\n"
-        "- <quantity>: Recommended transaction quantity.\n\n"
+        f"- <quantity>: Recommended transaction quantity (number of shares). For a 'hold' decision, use zero.{chr(10)}{chr(10)}"
         "**Instructions:**\n"
-        "- Provide only the JSON output with no additional text.\n"
+        f"- Provide only the JSON output with no additional text.{chr(10)}"
         "- Return an empty array if no actions are necessary."
     )
     log_debug(f"AI making-decisions prompt:{chr(10)}{ai_prompt}")
