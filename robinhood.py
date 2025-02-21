@@ -25,7 +25,8 @@ async def login_to_robinhood():
                 integration_version="v1.0.0",
             )
             mfa_code = await onePasswordClient.secrets.resolve("op://" + OP_VAULT_NAME + "/" + OP_ITEM_NAME + "/one-time password?attribute=otp")
-
+            log_debug("1Password login successful with MFA.")
+        
         if mfa_code:
             log_debug("Attempting to login to Robinhood with MFA...")
             rh.login(ROBINHOOD_USERNAME, ROBINHOOD_PASSWORD, mfa_code=mfa_code)
