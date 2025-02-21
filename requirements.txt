@@ -1,4 +1,4 @@
 robin_stocks
 openai
-onepassword
+onepassword-sdk
 pandas
