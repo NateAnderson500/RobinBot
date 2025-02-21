@@ -2,3 +2,4 @@ robin_stocks
 openai
 onepassword-sdk
 pandas
+zoneinfo
