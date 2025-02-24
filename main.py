@@ -69,8 +69,11 @@ def make_ai_decisions(buying_power, portfolio_overview, watchlist_overview):
     ai_prompt = (
         "**Context:**\n"
         f"Today is {datetime.now(ZoneInfo('America/New_York')).strftime('%Y-%m-%dT%H:%M:%SZ')}.{chr(10)}"
-        f"You are a short-term investment advisor managing a stock portfolio.{chr(10)}"
+        f"You are a short to medium-term investment advisor managing a Robinhood stock portfolio.{chr(10)}"
         f"You analyze market conditions every {RUN_INTERVAL_SECONDS} seconds and make investment decisions.{chr(10)}{chr(10)}"
+        f"You should analyze the portfolio and watchlist data to make decisions on buying, selling, or holding stocks.{chr(10)}{chr(10)}"
+        f"You should NEVER open and close the same position within the same trading week, unless there is a significant change in the stock's fundamentals (50% +/- 5%).{chr(10)}{chr(10)}"
+        f"Robinhood allows traders to trade fractional stocks, (e.g., 0.5 shares) so make sure to take that into account when you are making your decisions and analyzing data.{chr(10)}{chr(10)}"
         "**Constraints:**\n"
         f"{chr(10).join(constraints)}{chr(10)}"
         f"(Note: These constraints may include guidelines such as risk tolerance, trading limits, or other investment rules.){chr(10)}{chr(10)}"
