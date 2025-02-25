@@ -164,3 +164,4 @@ cython_debug/
 # User data
 config.py
 trading_logs.db
+output.txt
