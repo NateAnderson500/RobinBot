@@ -239,7 +239,7 @@ def sell_stock(symbol, quantity):
 
     if MODE == "manual":
         confirm = input(f"Confirm sell for {symbol} of {quantity}? (yes/no): ")
-        if confirm.lower() != ["yes" or "y"]:
+        if confirm.lower() not in ["yes", "y"]:
             return {"id": "cancelled"}
 
     sell_resp = rh_run_with_retries(rh.orders.order_sell_market, symbol, quantity, timeInForce="gfd")
@@ -255,7 +255,7 @@ def buy_stock(symbol, quantity):
 
     if MODE == "manual":
         confirm = input(f"Confirm buy for {symbol} of {quantity}? (yes/no): ")
-        if confirm.lower() != ["yes" or "y"]:
+        if confirm.lower() not in ["yes", "y"]:
             return {"id": "cancelled"}
 
     buy_resp = rh_run_with_retries(rh.orders.order_buy_market, symbol, quantity, timeInForce="gfd")
