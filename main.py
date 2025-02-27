@@ -6,6 +6,7 @@ import re
 from config import *
 from log import *
 from robinhood import *
+from bot import *
 import asyncio
 from zoneinfo import ZoneInfo
 
@@ -13,8 +14,23 @@ from zoneinfo import ZoneInfo
 # Initialize session and login
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
+# Figure out if the program has run today, if not, update the date
+def has_run_today():
+    today = datetime.now().strftime('%Y-%m-%d')
+    last_run = ""
+    try:
+        with open("last_run.txt", "r") as f:
+            last_run = f.read()
+    except FileNotFoundError:
+        with open("last_run.txt", "w") as f:
+            f.write(today)
+    if today != last_run:
+        with open("last_run.txt", "w") as f:
+            f.write(today)
+    return today == last_run
 
-# Make AI request to OpenAI API
+
+# Make AI request to OpenAI API 
 def make_ai_request(prompt):
     ai_resp = openai_client.chat.completions.create(
         model=OPENAI_MODEL_NAME,
