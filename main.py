@@ -9,6 +9,7 @@ from robinhood import *
 from bot import *
 import asyncio
 from zoneinfo import ZoneInfo
+import threading
 
 
 # Initialize session and login
@@ -288,11 +289,27 @@ def trading_bot():
     return trading_results
 
 
+running = True
+
+def listen_for_stop():
+    global running
+    while running:
+        log_info("Enter 'stop' to stop the bot: ")
+        command = input()
+        if command.lower() == "stop":
+            running = False
+            log_info("Stopping the bot...")
+
+
 # Run trading bot in a loop
 async def main():
     await login_to_robinhood()
+    
+    # start the thread to listen for stop command
+    stop_thread = threading.Thread(target=listen_for_stop)
+    stop_thread.start()
 
-    while True:
+    while running:
         try:
             if is_market_open():
                 run_interval_seconds = RUN_INTERVAL_SECONDS
@@ -315,6 +332,8 @@ async def main():
 
         log_info(f"Waiting for {run_interval_seconds} seconds...")
         time.sleep(run_interval_seconds)
+    
+    log_info("Bot stopped")
 
 
 # Run the main function
