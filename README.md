@@ -2,6 +2,10 @@
 
 <img src="images/avatar.png" width="277" alt="Robinhood AI Trading Bot"/>
 
+## Authors: 
+- Original Author: Ivan Seredkin
+- Modified by: Nathaniel Anderson
+
 ## ⚡ Overview
 The **Robinhood AI Trading Bot** is a simple Python script
 that combines **OpenAI's intelligence** with **Robinhood's trading capabilities**
@@ -258,6 +262,11 @@ Are you sure you want to run the bot in auto mode? (yes/no): yes
 Copy the example config and update it with your details::
    ```sh
    cp config.py.example config.py
+   ```
+
+Copy the last_run file: (this file will remain empty until the first run)
+   ```sh
+   cp last_run.txt.example last_run.txt
    ```
 
 Fill in config.py with the required parameters:
