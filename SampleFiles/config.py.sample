@@ -18,6 +18,7 @@ RUN_INTERVAL_SECONDS = 600                  # Trading interval in seconds (if th
 # OpenAI config parameters
 OPENAI_ASSISTANT_ID = "..."                 # OpenAI assistant ID
 OPENAI_VECTOR_STORE_ID = "..."              # OpenAI assistant's vector store ID
+OPENAI_MODEL_NAME = "gpt-4o-mini"           # OpenAI model name
 
 # Robinhood config parameters
 TRADE_EXCEPTIONS = []                       # List of stocks to exclude from trading (e.g. ["AAPL", "TSLA", "AMZN"])
@@ -29,5 +30,3 @@ MAX_SELLING_AMOUNT_USD = 10.0               # Maximum sell amount in USD (False 
 MIN_BUYING_AMOUNT_USD = 1.0                 # Minimum buy amount in USD (False - disable setting)
 MAX_BUYING_AMOUNT_USD = 10.0                # Maximum buy amount in USD (False - disable setting)
 
-# OpenAI config params
-OPENAI_MODEL_NAME = "gpt-4o-mini"           # OpenAI model name
