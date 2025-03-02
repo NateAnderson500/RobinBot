@@ -10,7 +10,11 @@ from bot import *
 import asyncio
 from zoneinfo import ZoneInfo
 import threading
+import queue
 
+# Global variables to control running state of the bot
+running = True
+input_queue = queue.Queue()
 
 # Initialize session and login
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
@@ -289,27 +293,27 @@ def trading_bot():
     return trading_results
 
 
-running = True
 
-def listen_for_stop():
-    global running
-    while running:
-        log_info("Enter 'stop' to stop the bot: ")
-        command = input()
-        if command.lower() == "stop":
-            running = False
-            log_info("Stopping the bot...")
 
 
 # Run trading bot in a loop
 async def main():
     await login_to_robinhood()
     
-    # start the thread to listen for stop command
-    stop_thread = threading.Thread(target=listen_for_stop)
-    stop_thread.start()
+    stop_event = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    
+    def input_thread():
+        log_info("Type 'stop' to stop the bot: ")
+        command = input()
+        if command.lower() == "stop":
+            log_debug("Stop command received, Stopping the bot...")
+            loop.call_soon_threadsafe(stop_event.set)
+    
+    threading.Thread(target=input_thread, daemon=True).start()  
+    
 
-    while running:
+    while not stop_event.is_set():
         try:
             if is_market_open():
                 run_interval_seconds = RUN_INTERVAL_SECONDS
@@ -324,15 +328,19 @@ async def main():
                 log_info(f"Bought: {'None' if len(bought_stocks) == 0 else ', '.join(bought_stocks)}")
                 log_info(f"Errors: {'None' if len(errors) == 0 else ', '.join(errors)}")
             else:
-                run_interval_seconds = 60
+                run_interval_seconds = 10
                 log_info("Market is closed, waiting for next run...")
         except Exception as e:
             run_interval_seconds = 60
             log_error(f"Trading bot error: {e}")
-
+        
         log_info(f"Waiting for {run_interval_seconds} seconds...")
-        time.sleep(run_interval_seconds)
-    
+        
+        try:
+            await asyncio.wait_for(stop_event.wait(), timeout=run_interval_seconds)
+        except asyncio.TimeoutError:
+            pass
+        
     log_info("Bot stopped")
 
 
