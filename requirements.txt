@@ -3,3 +3,4 @@ openai
 onepassword-sdk
 pandas
 zoneinfo
+pandas_market_calendars
