@@ -11,6 +11,9 @@ import asyncio
 from zoneinfo import ZoneInfo
 import threading
 import queue
+import pandas_market_calendars as mcal
+import pandas as pd
+import pytz
 
 # Global variables to control running state of the bot
 running = True
@@ -54,7 +57,7 @@ def parse_ai_response(ai_response):
     return decisions
 
 
-# Get AI amount guidelines
+# Get AI amount guidelines - MOVED TO BOT.PY
 def get_ai_amount_guidelines():
     sell_guidelines = []
     if MIN_SELLING_AMOUNT_USD is not False:
@@ -131,27 +134,56 @@ def filter_ai_hallucinations(decisions):
     decisions = [decision for decision in decisions if decision['decision'] == "hold" or decision['quantity'] > 0]
     return decisions
 
-# Limit watchlist stocks based on the current week number
-def limit_watchlist_stocks(watchlist_stocks, limit):
+# Get trading day index
+def get_trading_day_index(current_date, start_date):
+    # Get NYSE calendar
+    nyse = mcal.get_calendar('NYSE')
+    
+    # Get schedule as a DataFrame for dates between start_date and current_date
+    schedule = nyse.schedule(start_date=start_date.strftime('%Y-%m-%d'), end_date=current_date.strftime('%Y-%m-%d'))
+    
+    # Normalize the trading day timestamps to dates
+    trading_days = schedule.index.normalize()
+    
+    # Convert current_date to a pandas Timestamp and normalize it
+    current_timestamp = pd.Timestamp(current_date).normalize()
+    
+    # Find the position of current_timestamp among trading_days
+    pos = trading_days.searchsorted(current_timestamp, side='right') - 1
+    
+    return pos
+
+
+# Limit watchlist stocks based on the trading day index
+def limit_watchlist_stocks(watchlist_stocks, limit, start_date_str="2025-01-01"):
     if len(watchlist_stocks) <= limit:
         return watchlist_stocks
 
-    # Sort watchlist stocks by symbol
+    # Sort the stocks by symbol to ensure consistency.
     watchlist_stocks = sorted(watchlist_stocks, key=lambda x: x['symbol'])
-
-    # Get the current month number
-    current_month = datetime.now().month
-
-    # Calculate the number of parts
-    num_parts = (len(watchlist_stocks) + limit - 1) // limit  # Ceiling division
-
-    # Determine the part to return based on the current month number
-    part_index = (current_month - 1) % num_parts
+    
+    # Set up Eastern Time
+    eastern = pytz.timezone('US/Eastern')
+    # Define a starting date (could be the beginning of the year or any fixed date)
+    start_date = eastern.localize(datetime.strptime(start_date_str, '%Y-%m-%d'))
+    
+    # Get the current date in Eastern Time, with time zeroed out.
+    current_date = datetime.now(eastern).replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Determine the trading day index from the start date to today.
+    trading_day_index = get_trading_day_index(current_date, start_date)
+    
+    # Calculate the number of chunks (using ceiling division)
+    num_parts = (len(watchlist_stocks) + limit - 1) // limit
+    
+    # Rotate every other trading day: divide the trading day index by 2, then cycle through the parts.
+    part_index = (trading_day_index // 2) % num_parts
+    
+    # Determine the start and end indices for the subset.
     start_index = part_index * limit
     end_index = min(start_index + limit, len(watchlist_stocks))
-
+    
     return watchlist_stocks[start_index:end_index]
-
 
 # Main trading bot function
 def trading_bot():
