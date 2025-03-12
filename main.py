@@ -56,39 +56,46 @@ def parse_ai_response(ai_response):
         raise Exception("Invalid JSON response from OpenAI: " + ai_response.choices[0].message.content.strip())
     return decisions
 
-
-# Get AI amount guidelines - MOVED TO BOT.PY
-def get_ai_amount_guidelines():
-    sell_guidelines = []
-    if MIN_SELLING_AMOUNT_USD is not False:
-        sell_guidelines.append(f"Minimum amount {MIN_SELLING_AMOUNT_USD} USD")
-    if MAX_SELLING_AMOUNT_USD is not False:
-        sell_guidelines.append(f"Maximum amount {MAX_SELLING_AMOUNT_USD} USD")
-    sell_guidelines = ", ".join(sell_guidelines) if sell_guidelines else None
-
-    buy_guidelines = []
-    if MIN_BUYING_AMOUNT_USD is not False:
-        buy_guidelines.append(f"Minimum amount {MIN_BUYING_AMOUNT_USD} USD")
-    if MAX_BUYING_AMOUNT_USD is not False:
-        buy_guidelines.append(f"Maximum amount {MAX_BUYING_AMOUNT_USD} USD")
-    buy_guidelines = ", ".join(buy_guidelines) if buy_guidelines else None
-
-    return sell_guidelines, buy_guidelines
-
-
-# Make AI-based decisions on stock portfolio and watchlist
-def make_ai_decisions(buying_power, portfolio_overview, watchlist_overview):
+# figure out the constraints for the AI
+def set_constraints(buying_power):
+    """
+    Combines initial constraints with buying and selling guidelines
+    into a single list.
+    """
     constraints = [
-        f"- Initial budget: {buying_power} USD",
+        f"- Initial budget: {buying_power} USD",            
         f"- Max portfolio size: {PORTFOLIO_LIMIT} stocks",
     ]
-    sell_guidelines, buy_guidelines = get_ai_amount_guidelines()
+
+        # Build sell guidelines
+    sell_guidelines_parts = []
+    if MIN_SELLING_AMOUNT_USD is not False:
+        sell_guidelines_parts.append(f"Minimum amount {MIN_SELLING_AMOUNT_USD} USD")
+    if MAX_SELLING_AMOUNT_USD is not False:
+        sell_guidelines_parts.append(f"Maximum amount {MAX_SELLING_AMOUNT_USD} USD")
+    sell_guidelines = ", ".join(sell_guidelines_parts) if sell_guidelines_parts else None
+
+    # Build buy guidelines
+    buy_guidelines_parts = []
+    if MIN_BUYING_AMOUNT_USD is not False:
+        buy_guidelines_parts.append(f"Minimum amount {MIN_BUYING_AMOUNT_USD} USD")
+    if MAX_BUYING_AMOUNT_USD is not False:
+        buy_guidelines_parts.append(f"Maximum amount {MAX_BUYING_AMOUNT_USD} USD")
+    buy_guidelines = ", ".join(buy_guidelines_parts) if buy_guidelines_parts else None
+
+    # Build sell guidelines
     if sell_guidelines:
         constraints.append(f"- Sell Amounts Guidelines: {sell_guidelines}")
     if buy_guidelines:
         constraints.append(f"- Buy Amounts Guidelines: {buy_guidelines}")
-    if len(TRADE_EXCEPTIONS) > 0:
+    if TRADE_EXCEPTIONS:  # if TRADE_EXCEPTIONS list is not empty
         constraints.append(f"- Excluded stocks: {', '.join(TRADE_EXCEPTIONS)}")
+
+    return constraints
+
+# Make AI-based decisions on stock portfolio and watchlist
+def make_ai_decisions(buying_power, portfolio_overview, watchlist_overview):
+    constraints = set_constraints(buying_power)
 
     ai_prompt = (
         "**Context:**\n"
