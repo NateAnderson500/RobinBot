@@ -1,6 +1,7 @@
 robin_stocks
 openai
+openai-agents
 onepassword-sdk
 pandas
-zoneinfo
 pandas_market_calendars
+pydantic
